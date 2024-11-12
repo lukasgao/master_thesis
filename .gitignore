@@ -1,0 +1,9 @@
+*.dta
+.DS_Store
+*.pyc
+__pycache__/
+venv/
+env/
+.ipynb_checkpoints/
+config.yaml
+.env
