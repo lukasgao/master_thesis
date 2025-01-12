@@ -7,3 +7,5 @@ env/
 .ipynb_checkpoints/
 config.yaml
 .env
+data/original_data/
+data/processed/
