@@ -6,7 +6,7 @@ RAW = BASE / "data" / "original_data"
 BLD = BASE / "data" / "processed"
 OUTPUT = BASE /"data" / "outputs"
 TEST = BASE / "tests"
-YEAR_RANGE = range(2014, 2024)
+YEAR_RANGE = range(2017, 2020)
 
 
 RANDOM_SEED = 42
