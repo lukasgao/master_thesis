@@ -1,0 +1,45 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{4}{D{.}{.}{-1}}}
+\toprule
+                &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}&\multicolumn{1}{c}{(4)}\\
+                &\multicolumn{1}{c}{roe}&\multicolumn{1}{c}{roe}&\multicolumn{1}{c}{tobinq}&\multicolumn{1}{c}{tobinq}\\
+\midrule
+treated\_post    &   -0.166\sym{**} &   -0.176\sym{**} &    0.308         &   -0.097         \\
+                & (-2.160)         & (-2.341)         &  (0.596)         & (-0.180)         \\
+L.gov\_score     &    0.274\sym{***}&    0.244\sym{***}&    1.582\sym{***}&    1.213\sym{***}\\
+                & (10.471)         &  (9.624)         &  (6.852)         &  (5.366)         \\
+L.gov\_score     &                  &                  &                  &                  \\
+                &                  &                  &                  &                  \\
+treated\_post\_gov&    0.327\sym{**} &    0.352\sym{***}&   -0.908         &   -0.004         \\
+                &  (2.418)         &  (2.650)         & (-0.941)         & (-0.004)         \\
+L.size          &                  &   -0.043\sym{***}&                  &   -0.586\sym{***}\\
+                &                  & (-6.326)         &                  & (-9.804)         \\
+L.size          &                  &                  &                  &                  \\
+                &                  &                  &                  &                  \\
+L.debt\_ratio    &                  &   -0.018         &                  &   -0.516\sym{**} \\
+                &                  & (-0.603)         &                  & (-2.126)         \\
+L.debt\_ratio    &                  &                  &                  &                  \\
+                &                  &                  &                  &                  \\
+L.nwc           &                  &   -0.037\sym{**} &                  &    0.413\sym{***}\\
+                &                  & (-2.081)         &                  &  (2.773)         \\
+L.nwc           &                  &                  &                  &                  \\
+                &                  &                  &                  &                  \\
+L.revenue\_growth&                  &    0.051\sym{***}&                  &    0.203\sym{***}\\
+                &                  &  (8.232)         &                  &  (3.955)         \\
+L.revenue\_growth&                  &                  &                  &                  \\
+                &                  &                  &                  &                  \\
+L.capex\_ratio   &                  &    0.029         &                  &   -0.785\sym{***}\\
+                &                  &  (1.180)         &                  & (-3.358)         \\
+L.capex\_ratio   &                  &                  &                  &                  \\
+                &                  &                  &                  &                  \\
+Constant        &   -0.092\sym{***}&    0.877\sym{***}&    1.606\sym{***}&   14.808\sym{***}\\
+                & (-6.693)         &  (5.756)         & (13.294)         & (11.062)         \\
+\midrule
+Observations    & 6375.000         & 6373.000         & 6375.000         & 6373.000         \\
+Adjusted R-squared&    0.255         &    0.279         &    0.716         &    0.734         \\
+Firm FE         &                  &                  &                  &                  \\
+Year FE         &                  &                  &                  &                  \\
+\bottomrule
+\end{tabular}
+}
