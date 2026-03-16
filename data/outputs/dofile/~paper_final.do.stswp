@@ -1,0 +1,543 @@
+use "did_data_2pct.dta", clear 
+xtset firm_id year
+*gen ln_ev = ln(ev)
+*winsor2 ln_ev, cut(2.5 97.5)
+
+
+winsor2 roa roe tobinq revenue_growth debt_ratio nwc turnover_rate capex_ratio manage_exp_ratio,cut(2.5, 97.5) 
+gen gov_lag = l.gov_score
+summ gov_lag if inrange(year, 2014, 2019), meanonly
+gen gov_c = gov_lag - r(mean)
+
+reghdfe roa_w c.gov_c##i.treated##i.post  l.revenue_growth_w l.size l.debt_ratio_w l.nwc_w l.capex_ratio_w if inrange(year, 2014, 2019), absorb(firm_id year) vce(cluster firm_id)
+
+******************************
+***  statistics summary  ***
+******************************
+est clear
+estpost tabstat roa_w gov_score capex_ratio_w revenue_growth_w size debt_ratio_w nwc_w ///
+    if inrange(year, 2014, 2019), ///
+    statistics(mean sd p50 min max count) columns(statistics)
+	
+esttab using "/Users/hengdegao/python/thesis/data/outputs/tables/main_regression.tex", replace ///
+    cells("mean(fmt(%9.2f)) sd(fmt(%9.2f)) p50(fmt(%9.2f)) min(fmt(%9.2f)) max(fmt(%9.2f)) count(fmt(%9.0f))") ///
+    nonumber nomtitle nonote noobs label booktabs ///
+    collabels("Mean" "SD" "Median" "Min" "Max" "N")
+	
+
+*******************************
+***  t-test  ***
+*******************************
+est clear
+
+estpost ttest roa_w gov_score size revenue_growth_w capex_ratio_w debt_ratio_w nwc_w if inrange(year, 2014, 2019) , by(treated) unequal
+
+esttab using "/Users/hengdegao/python/thesis/data/outputs/tables/ttest.tex", replace ///
+	cells("mu_2(fmt(4)) mu_1(fmt(4)) b(fmt(4)) t(fmt(2)) p(fmt(3))") ///
+    collabels("Treatment Mean" "Control Mean" "Difference" "T-stat" "P-value") ///
+    nonumber noobs label
+*******************************
+***  parallel trends test ***
+*******************************
+gen relative_year = year - 2018
+tab relative_year, gen(D)
+rename D2 pre_4  
+rename D3 pre_3  
+rename D4 pre_2  
+rename D5 pre_1  
+rename D6 post_0 
+rename D7 post_1 
+
+***********test pre_4 pre_3 pre_2
+
+global event_dummies "pre_4 pre_3 pre_2 post_0 post_1"
+
+foreach var of varlist $event_dummies {
+    gen `var'_treated = `var' * treated
+}
+
+reghdfe roa_w pre_4_treated pre_3_treated pre_2_treated post_0_treated post_1_treated L.(size gov_score revenue_growth_w debt_ratio_w nwc_w), absorb(firm_id year) vce(cluster firm_id)
+
+coefplot, keep(*_treated) vertical yline(0) ci(95)   ytitle("Coefficient on Treated x Year") xtitle("Years Relative to Trade War Shock") coeflabels(pre_4_treated = "-4" pre_3_treated = "-3" pre_2_treated = "-2" post_0_treated = "0" post_1_treated = "1") graphregion(fcolor(white)) addplot(line @b @at, lcolor(gs1) ) ciopts(lpattern(dash) recast(rcap) msize(medium))  
+
+
+	
+*******************************
+***   regression  ****
+*******************************
+
+******* main regression  *****
+est clear  
+reghdfe roa_w  i.treated##i.post  if inrange(year, 2014, 2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m1
+
+reghdfe roa_w c.gov_c##i.treated##i.post if inrange(year, 2014, 2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m2
+
+reghdfe roa_w c.gov_c##i.treated##i.post l.revenue_growth_w l.size l.debt_ratio_w l.nwc_w l.capex_ratio_w if inrange(year, 2014, 2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m3
+
+esttab m1 m2 m3  using "/Users/hengdegao/python/thesis/data/outputs/tables/main_regression.tex", replace ///
+	collabels(none) ///
+    cells(b(fmt(3) star) t(par fmt(3))) ///
+    booktabs  ///
+    keep(1.treated#1.post gov_c 1.treated#1.post#c.gov_c ///
+         L.size L.debt_ratio_w L.nwc_w L.revenue_growth_w L.capex_ratio_w _cons) ///
+    order(1.treated#1.post gov_c 1.treated#1.post#c.gov_c ///
+          L.size L.debt_ratio_w L.nwc_w L.revenue_growth_w L.capex_ratio_w _cons) ///
+    coeflabels(1.treated#1.post "treated × post" ///
+               gov_c "L.centered_gov_score" ///
+               1.treated#1.post#c.gov_c "treated × post × centered_gov_score" ///
+               L.size "L.size" ///
+               L.debt_ratio_w "L.debt_ratio_w" ///
+               L.nwc_w "L.nwc_w" ///
+               L.revenue_growth_w "L.revenue_growth_w" ///
+               L.capex_ratio_w "L.capex_ratio_w") ///
+    stats(N r2_a firmfe yearfe, labels("Observations" "Adjusted R-squared" "Firm FE" "Year FE")) ///
+    label star(* 0.10 ** 0.05 *** 0.01) ///
+    nogaps compress ///
+    alignment(D{.}{.}{-1})
+	
+
+******* robustness test ****** 
+est clear
+******************************
+* 1% 
+******************************
+use "did_data_1pct.dta", clear 
+xtset firm_id year
+
+winsor2 roa roe tobinq revenue_growth debt_ratio nwc turnover_rate capex_ratio manage_exp_ratio,cut(2.5, 97.5) 
+gen gov_lag = l.gov_score
+summ gov_lag if inrange(year, 2014, 2019), meanonly
+gen gov_c = gov_lag - r(mean)
+
+reghdfe roa_w c.gov_c##i.treated##i.post if inrange(year, 2014, 2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m1
+
+reghdfe roa_w c.gov_c##i.treated##i.post l.revenue_growth_w l.size l.debt_ratio_w l.nwc_w l.capex_ratio_w if inrange(year, 2014, 2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m2
+******************************
+* 6% 
+******************************
+use "did_data_6pct.dta", clear 
+xtset firm_id year
+winsor2 roa roe tobinq revenue_growth debt_ratio nwc turnover_rate capex_ratio manage_exp_ratio,cut(2.5, 97.5) 
+gen gov_lag = l.gov_score
+summ gov_lag if inrange(year, 2014, 2019), meanonly
+gen gov_c = gov_lag - r(mean)
+
+reghdfe roa_w c.gov_c##i.treated##i.post if inrange(year, 2014, 2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m3
+
+reghdfe roa_w c.gov_c##i.treated##i.post l.revenue_growth_w l.size l.debt_ratio_w l.nwc_w l.capex_ratio_w if inrange(year, 2014, 2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark"
+est store m4
+
+esttab m1 m2 m3 m4 using  "/Users/hengdegao/python/thesis/data/outputs/tables/robustness_regression.tex", replace ///
+	collabels(none) ///
+    cells(b(fmt(3) star) t(par fmt(3))) ///
+    booktabs  ///
+    keep(1.treated#1.post gov_c 1.treated#1.post#c.gov_c ///
+         L.size L.debt_ratio_w L.nwc_w L.revenue_growth_w L.capex_ratio_w _cons) ///
+    order(1.treated#1.post gov_c 1.treated#1.post#c.gov_c ///
+          L.size L.debt_ratio_w L.nwc_w L.revenue_growth_w L.capex_ratio_w _cons) ///
+    coeflabels(1.treated#1.post "treated × post" ///
+               gov_c "L.centered_gov_score" ///
+               1.treated#1.post#c.gov_c "treated × post × centered_gov_score" ///
+               L.size "L.size" ///
+               L.debt_ratio_w "L.debt_ratio_w" ///
+               L.nwc_w "L.nwc_w" ///
+               L.revenue_growth_w "L.revenue_growth_w" ///
+               L.capex_ratio_w "L.capex_ratio_w") ///
+    stats(N r2_a firmfe yearfe, labels("Observations" "Adjusted R-squared" "Firm FE" "Year FE")) ///
+    label star(* 0.10 ** 0.05 *** 0.01) ///
+    nogaps compress ///
+    alignment(D{.}{.}{-1})
+
+	
+******************************
+* alternative performance measures
+******************************
+use "did_data_2pct.dta", clear 
+xtset firm_id year
+winsor2 roa roe tobinq revenue_growth debt_ratio nwc turnover_rate capex_ratio manage_exp_ratio,cut(2.5, 97.5) 
+gen gov_lag = l.gov_score
+summ gov_lag if inrange(year, 2014, 2019), meanonly
+gen gov_c = gov_lag - r(mean)
+
+est clear
+
+reghdfe roe_w c.gov_c##i.treated##i.post if inrange(year, 2014, 2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m1
+
+reghdfe roe_w c.gov_c##i.treated##i.post l.revenue_growth_w l.size l.debt_ratio_w l.nwc_w l.capex_ratio_w if inrange(year, 2014, 2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m2
+
+reghdfe tobinq_w c.gov_c##i.treated##i.post if inrange(year, 2014, 2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m3
+
+reghdfe tobinq_w c.gov_c##i.treated##i.post l.revenue_growth_w l.size l.debt_ratio_w l.nwc_w l.capex_ratio_w if inrange(year, 2014, 2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m4
+
+esttab m1 m2 m3 m4 using "/Users/hengdegao/python/thesis/data/outputs/tables/alternative_regression.tex", replace ///
+	collabels(none) ///
+    cells(b(fmt(3) star) t(par fmt(3))) ///
+    booktabs  ///
+    keep(1.treated#1.post gov_c 1.treated#1.post#c.gov_c ///
+         L.size L.debt_ratio_w L.nwc_w L.revenue_growth_w L.capex_ratio_w _cons) ///
+    order(1.treated#1.post gov_c 1.treated#1.post#c.gov_c ///
+          L.size L.debt_ratio_w L.nwc_w L.revenue_growth_w L.capex_ratio_w _cons) ///
+    coeflabels(1.treated#1.post "treated × post" ///
+               gov_c "L.centered_gov_score" ///
+               1.treated#1.post#c.gov_c "treated × post × centered_gov_score" ///
+               L.size "L.size" ///
+               L.debt_ratio_w "L.debt_ratio_w" ///
+               L.nwc_w "L.nwc_w" ///
+               L.revenue_growth_w "L.revenue_growth_w" ///
+               L.capex_ratio_w "L.capex_ratio_w") ///
+    stats(N r2_a firmfe yearfe, labels("Observations" "Adjusted R-squared" "Firm FE" "Year FE")) ///
+    label star(* 0.10 ** 0.05 *** 0.01) ///
+    nogaps compress ///
+    alignment(D{.}{.}{-1})
+
+	
+******************************
+* placebo tests
+******************************
+use "did_data_2pct.dta", clear 
+xtset firm_id year
+winsor2 roa roe tobinq revenue_growth debt_ratio nwc turnover_rate capex_ratio manage_exp_ratio,cut(2.5, 97.5) 
+gen gov_lag = l.gov_score
+summ gov_lag if year < 2018, meanonly
+gen gov_c = gov_lag - r(mean)
+
+gen post_placebo = (year >= 2016) if year < 2018
+
+est clear  
+reghdfe roa_w  i.treated##i.post_placebo year if year < 2018, absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m1
+
+reghdfe roa_w c.gov_c##i.treated##i.post_placebo if year < 2018, absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m2
+
+reghdfe roa_w c.gov_c##i.treated##i.post_placebo l.revenue_growth_w l.size l.debt_ratio_w l.nwc_w l.capex_ratio_w if year < 2018, absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m3
+
+esttab m1 m2 m3  using "/Users/hengdegao/python/thesis/data/outputs/tables/placebo_regression.tex", replace ///
+	collabels(none) ///
+    cells(b(fmt(3) star) t(par fmt(3))) ///
+    booktabs  ///
+    keep(1.treated#1.post_placebo gov_c 1.treated#1.post_placebo#c.gov_c ///
+         L.size L.debt_ratio_w L.nwc_w L.revenue_growth_w L.capex_ratio_w _cons) ///
+    order(gov_c 1.treated#1.post_placebo 1.treated#1.post_placebo#c.gov_c ///
+          L.size L.debt_ratio_w L.nwc_w L.revenue_growth_w L.capex_ratio_w _cons) ///
+    coeflabels(1.treated#1.post_placebo "treated × placebo_post" ///
+               gov_c "L.centered_gov_score" ///
+               1.treated#1.post#c.gov_c "treated × post × centered_gov_score" ///
+               L.size "L.size" ///
+               L.debt_ratio_w "L.debt_ratio_w" ///
+               L.nwc_w "L.nwc_w" ///
+               L.revenue_growth_w "L.revenue_growth_w" ///
+               L.capex_ratio_w "L.capex_ratio_w") ///
+    stats(N r2_a firmfe yearfe, labels("Observations" "Adjusted R-squared" "Firm FE" "Year FE")) ///
+    label star(* 0.10 ** 0.05 *** 0.01) ///
+    nogaps compress ///
+    alignment(D{.}{.}{-1})
+
+	
+	
+	
+	
+	
+**************************************************************************
+* 异质性分析
+**************************************************************************
+use "did_data_2pct.dta", clear 
+xtset firm_id year
+
+winsor2 roa roe tobinq revenue_growth debt_ratio nwc turnover_rate capex_ratio manage_exp_ratio,cut(2.5, 97.5) 
+gen gov_lag = l.gov_score
+summ gov_lag if inrange(year, 2014, 2019), meanonly
+gen gov_c = gov_lag - r(mean)
+
+********四重交互
+est clear
+
+reghdfe roa_w c.gov_c##i.treated##i.post##i.soe ///
+    if inrange(year,2014,2019), ///
+    absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m1
+
+
+reghdfe roa_w c.gov_c##i.treated##i.post##i.soe ///
+        l.revenue_growth_w l.size l.debt_ratio_w l.nwc_w l.capex_ratio_w ///
+        if inrange(year,2014,2019), ///
+        absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m2
+
+reghdfe roe_w c.gov_c##i.treated##i.post##i.soe ///
+    l.revenue_growth_w l.size l.debt_ratio_w l.nwc_w l.capex_ratio_w ///
+    if inrange(year,2014,2019), ///
+    absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m3
+
+	
+esttab m1 m2 m3 using "/Users/hengdegao/python/thesis/data/outputs/tables/soe_regression.tex", replace ///
+    collabels(none) ///
+    cells(b(fmt(3) star) t(par fmt(3))) ///
+    booktabs ///
+    keep(gov_c ///
+         1.treated#1.post#c.gov_c ///
+         1.treated#1.post#1.soe#c.gov_c ///
+         L.size L.debt_ratio_w L.nwc_w L.revenue_growth_w L.capex_ratio_w ///
+         _cons) ///
+    order(gov_c ///
+          1.treated#1.post#c.gov_c ///
+          1.treated#1.post#1.soe#c.gov_c ///
+          L.size L.debt_ratio_w L.nwc_w L.revenue_growth_w L.capex_ratio_w ///
+          _cons) ///
+    coeflabels(gov_c "L.centered_gov_score" ///
+               1.treated#1.post#c.gov_c "treated × post × centered_gov_score × (Non-SOE)" ///
+               1.treated#1.post#1.soe#c.gov_c "treated × post × centered_gov_score × SOE" ///
+               L.size "L.size" ///
+               L.debt_ratio_w "L.debt_ratio_w" ///
+               L.nwc_w "L.nwc_w" ///
+               L.revenue_growth_w "L.revenue_growth_w" ///
+               L.capex_ratio_w "L.capex_ratio_w" ///
+               _cons "Constant") ///
+    stats(N r2_a firmfe yearfe, labels("Observations" "Adjusted R-squared" "Firm FE" "Year FE")) ///
+    star(* 0.10 ** 0.05 *** 0.01) ///
+    nogaps compress ///
+    alignment(D{.}{.}{-1})
+
+		
+******************************************************************************
+* 机制分析
+******************************************************************************
+* Step 1: 机制回归
+
+
+est clear
+* Financing channel
+reghdfe debt_ratio_w c.gov_c##i.treated##i.post ///
+    l.revenue_growth_w l.size l.nwc_w ///
+    if inrange(year,2014,2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m1
+
+* Investment channel
+reghdfe capex_ratio_w c.gov_c##i.treated##i.post ///
+    l.revenue_growth_w l.size l.nwc_w ///
+    if inrange(year,2014,2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m2
+
+* Efficiency channel
+reghdfe manage_exp_ratio_w c.gov_c##i.treated##i.post ///
+    l.revenue_growth_w l.size l.nwc_w ///
+    if inrange(year,2014,2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m3
+
+* Asset utilization channel
+reghdfe turnover_rate_w c.gov_c##i.treated##i.post ///
+    l.revenue_growth_w l.size l.nwc_w ///
+    if inrange(year,2014,2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m4
+
+
+esttab m1 m2 m3 m4 using "/Users/hengdegao/python/thesis/data/outputs/tables/channel_regression.tex", replace ///
+    mgroups("Dependent variable:", pattern(1 0 0 0) span prefix(\multicolumn{@span}{c}{) suffix(}) ) ///
+    mtitles("Debt ratio" "CAPEX ratio" "Mgmt. exp. ratio" "Turnover rate") ///
+    cells(b(fmt(3) star) t(par fmt(3))) ///
+    booktabs ///
+    keep(1.treated#1.post gov_c 1.treated#1.post#c.gov_c ///
+         L.size  L.nwc_w L.revenue_growth_w _cons) ///
+    order(gov_c 1.treated#1.post 1.treated#1.post#c.gov_c ///
+          L.size  L.nwc_w L.revenue_growth_w  _cons) ///
+    coeflabels(1.treated#1.post "treated  ×  post" ///
+               gov_c "L.centered_gov_score" ///
+               1.treated#1.post#c.gov_c "treated  × post  × centered_gov_score" ///
+               L.size "L.size" ///
+               L.nwc_w "L.nwc_w" ///
+               L.revenue_growth_w "L.revenue_growth_w") ///
+    stats(N r2_a firmfe yearfe, labels("Observations" "Adjusted R-squared" "Firm FE" "Year FE")) ///
+    star(* 0.10 ** 0.05 *** 0.01) ///
+    nogaps compress ///
+    alignment(D{.}{.}{-1})
+
+***************************************************
+*分组回归
+***************************************************
+est clear
+
+bysort year: egen median_gov = median(gov_lag)
+gen gov_high = (gov_lag >= median_gov)
+xtset firm_id year
+
+
+reghdfe turnover_rate_w i.treated##i.post l.revenue_growth_w l.size l.debt_ratio_w l.nwc_w l.capex_ratio_w if gov_high==0 & inrange(year,2014,2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m1
+
+
+reghdfe turnover_rate_w i.treated##i.post l.revenue_growth_w l.size l.debt_ratio_w l.nwc_w l.capex_ratio_w if gov_high==1 & inrange(year,2014,2019), absorb(firm_id year) vce(cluster firm_id)
+estadd local firmfe "\checkmark" 
+estadd local yearfe "\checkmark" 
+est store m2
+
+esttab m1 m2  using "/Users/hengdegao/python/thesis/data/outputs/tables/turnover_rate_regression.tex", replace ///
+    mgroups("Dependent variable:", pattern(1 0 0 0) span prefix(\multicolumn{@span}{c}{) suffix(}) ) ///
+    mtitles("low corporate governance" "high corporate governance") ///
+    cells(b(fmt(3) star) t(par fmt(3))) ///
+    booktabs ///
+    keep(1.treated#1.post gov_lag ///
+         L.size  L.nwc_w L.revenue_growth_w _cons) ///
+    order(gov_lag 1.treated#1.post  ///
+          L.size  L.nwc_w L.revenue_growth_w  _cons) ///
+    coeflabels(1.treated#1.post "treated  ×  post" ///
+               gov_lag "L.gov_score" ///
+               L.size "L.size" ///
+               L.debt_ratio_w "L.debt_ratio_w" ///
+               L.nwc_w "L.nwc_w" ///
+               L.revenue_growth_w "L.revenue_growth_w" ///
+               L.capex_ratio_w "L.capex_ratio_w") ///
+    stats(N r2_a firmfe yearfe, labels("Observations" "Adjusted R-squared" "Firm FE" "Year FE")) ///
+    star(* 0.10 ** 0.05 *** 0.01) ///
+    nogaps compress ///
+    alignment(D{.}{.}{-1})
+
+***************************************************************
+use "did_data_1pct.dta", clear 
+
+clear
+tempfile results
+save `results', emptyok
+
+forvalues t = 1/10 {
+
+    use did_data_`t'pct.dta, clear
+
+    xtset firm_id year
+
+    winsor2 roa roe tobinq revenue_growth debt_ratio nwc turnover_rate capex_ratio manage_exp_ratio, cut(2.5 97.5)
+
+    gen gov_lag = l.gov_score
+    summ gov_lag if inrange(year,2014,2019), meanonly
+    gen gov_c = gov_lag - r(mean)
+
+    reghdfe roa_w ///
+        c.gov_c##i.treated##i.post ///
+        l.revenue_growth_w l.size l.debt_ratio_w l.nwc_w l.capex_ratio_w ///
+        if inrange(year,2014,2019), ///
+        absorb(firm_id year) vce(cluster firm_id)
+
+    * 核心系数和标准误
+    scalar beta_val = _b[c.gov_c#1.treated#1.post]
+    scalar se_val   = _se[c.gov_c#1.treated#1.post]
+
+    * p-value
+    scalar t_stat = beta_val / se_val
+    scalar p_val  = 2 * ttail(e(df_r), abs(t_stat))
+
+    * treated × post 系数（如果你也想报）
+    scalar tp_val = _b[1.treated#1.post]
+
+    * 样本量和R2
+    scalar N_val     = e(N)
+    scalar r2a_val   = e(r2_a)
+
+    * treated firms 数量
+    quietly levelsof firm_id if treated == 1 & inrange(year,2014,2019), local(treated_ids)
+    local n_treated : word count `treated_ids'
+    scalar treated_n = `n_treated'
+
+    clear
+    set obs 1
+
+    gen threshold     = `t'
+    gen beta          = beta_val
+    gen se            = se_val
+    gen p_value       = p_val
+    gen treated_post  = tp_val
+    gen obs           = N_val
+    gen adj_r2        = r2a_val
+    gen treated_firms = treated_n
+
+    append using `results'
+    save `results', replace
+}
+
+use `results', clear
+sort threshold
+
+
+gen upper95 = beta + 1.96*se
+gen lower95 = beta - 1.96*se
+
+twoway ///
+    (rcap upper95 lower95 threshold, lcolor(gs8) lwidth(medium)) ///
+    (connected beta threshold, lcolor(navy) mcolor(navy) msymbol(O) ///
+        msize(medium) lwidth(medium)), ///
+    yline(0, lcolor(maroon) lpattern(dash) lwidth(medium)) ///
+    xlabel(1(1)10, labsize(small)) ///
+    xtitle("Treatment threshold (%)", size(medsmall)) ///
+    ytitle("Coefficient on Treated × Post × Governance", size(medsmall)) ///
+    title("Robustness to Alternative Treatment Thresholds", size(medium)) ///
+    legend(off) ///
+    graphregion(color(white)) ///
+    plotregion(color(white)) ///
+    bgcolor(white)
+
+
+listtab threshold beta se p_value treated_post obs treated_firms adj_r2 ///
+    using "threshold_appendix.tex", replace ///
+    rstyle(tabular) head(
+    "\begin{tabular}{lccccccc}" ///
+    "\hline" ///
+    "Threshold & Coef. & SE & p-value & TxP & Obs. & Treated Firms & Adj. \$R^2\$ \\" ///
+    "\hline"
+    ) foot(
+    "\hline" ///
+    "\end{tabular}"
+    )

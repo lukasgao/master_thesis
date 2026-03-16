@@ -1,0 +1,33 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{3}{D{.}{.}{-1}}}
+\toprule
+                &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}\\
+                &\multicolumn{1}{c}{roa}&\multicolumn{1}{c}{roa}&\multicolumn{1}{c}{roa}\\
+\midrule
+L.centered\_gov\_score&                  &    0.108\sym{***}&    0.089\sym{***}\\
+                &                  &  (6.967)         &  (5.789)         \\
+treated × placebo\_post&   -0.002         &   -0.005\sym{*}  &   -0.005\sym{*}  \\
+                & (-0.603)         & (-1.649)         & (-1.822)         \\
+treated=1 $\times$ post\_placebo=1 $\times$ gov\_c&                  &    0.041         &    0.042         \\
+                &                  &  (1.265)         &  (1.363)         \\
+L.size          &                  &                  &   -0.016\sym{***}\\
+                &                  &                  & (-5.193)         \\
+L.debt\_ratio\_w  &                  &                  &   -0.030\sym{*}  \\
+                &                  &                  & (-1.944)         \\
+L.nwc\_w         &                  &                  &   -0.008         \\
+                &                  &                  & (-0.863)         \\
+L.revenue\_growth\_w&                  &                  &    0.017\sym{***}\\
+                &                  &                  &  (5.807)         \\
+L.capex\_ratio\_w &                  &                  &    0.015         \\
+                &                  &                  &  (1.401)         \\
+Constant        &    0.034\sym{***}&    0.033\sym{***}&    0.380\sym{***}\\
+                &(155.862)         &(111.848)         &  (5.754)         \\
+\midrule
+Observations    & 6335.000         & 5068.000         & 5066.000         \\
+Adjusted R-squared&    0.510         &    0.510         &    0.521         \\
+Firm FE         &\checkmark         &\checkmark         &\checkmark         \\
+Year FE         &\checkmark         &\checkmark         &\checkmark         \\
+\bottomrule
+\end{tabular}
+}

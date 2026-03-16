@@ -1,0 +1,31 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{4}{D{.}{.}{-1}}}
+\toprule
+          &\multicolumn{4}{c}{Dependent variable:}                                    \\
+          &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}&\multicolumn{1}{c}{(4)}\\
+          &\multicolumn{1}{c}{Debt ratio}&\multicolumn{1}{c}{CAPEX ratio}&\multicolumn{1}{c}{Mgmt. exp. ratio}&\multicolumn{1}{c}{Turnover rate}\\
+          &      b/t         &      b/t         &      b/t         &      b/t         \\
+\midrule
+L.centered\_gov\_score&   -0.053\sym{***}&    0.014         &   -0.022\sym{**} &    0.062         \\
+          & (-2.814)         &  (0.800)         & (-2.066)         &  (1.614)         \\
+treated  ×  post&    0.007         &    0.003         &   -0.002         &   -0.014         \\
+          &  (1.016)         &  (0.499)         & (-0.414)         & (-0.972)         \\
+treated  × post  × centered\_gov\_score&    0.008         &    0.046         &    0.045         &    0.178         \\
+          &  (0.130)         &  (0.731)         &  (1.183)         &  (1.351)         \\
+L.size    &    0.037\sym{***}&    0.010\sym{**} &   -0.002         &   -0.060\sym{***}\\
+          &  (8.718)         &  (2.295)         & (-0.918)         & (-4.850)         \\
+L.nwc\_w   &   -0.139\sym{***}&    0.074\sym{***}&   -0.013\sym{*}  &   -0.045\sym{*}  \\
+          &(-12.555)         &  (6.993)         & (-1.913)         & (-1.691)         \\
+L.revenue\_growth\_w&   -0.007\sym{**} &   -0.003         &   -0.025\sym{***}&    0.147\sym{***}\\
+          & (-2.046)         & (-0.819)         &(-11.040)         & (13.813)         \\
+\_cons    &   -0.652\sym{***}&   -0.175\sym{*}  &    0.150\sym{***}&    1.943\sym{***}\\
+          & (-6.818)         & (-1.721)         &  (2.727)         &  (7.017)         \\
+\midrule
+Observations& 7600.000         & 7600.000         & 7600.000         & 7600.000         \\
+Adjusted R-squared&    0.770         &    0.560         &    0.739         &    0.823         \\
+Firm FE   &\checkmark         &\checkmark         &\checkmark         &\checkmark         \\
+Year FE   &\checkmark         &\checkmark         &\checkmark         &\checkmark         \\
+\bottomrule
+\end{tabular}
+}

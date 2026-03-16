@@ -1,0 +1,29 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{2}{D{.}{.}{-1}}}
+\toprule
+          &\multicolumn{2}{c}{Dependent variable:}\\
+          &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}\\
+          &\multicolumn{1}{c}{low corporate governance}&\multicolumn{1}{c}{high corporate governance}\\
+          &      b/t         &      b/t         \\
+\midrule
+L.gov\_score&                  &                  \\
+          &                  &                  \\
+treated  ×  post&   -0.034\sym{*}  &   -0.001         \\
+          & (-1.655)         & (-0.047)         \\
+L.size    &   -0.078\sym{***}&   -0.049\sym{***}\\
+          & (-3.727)         & (-3.315)         \\
+L.nwc\_w   &   -0.056         &   -0.034         \\
+          & (-1.082)         & (-0.968)         \\
+L.revenue\_growth\_w&    0.139\sym{***}&    0.150\sym{***}\\
+          &  (8.390)         & (10.410)         \\
+\_cons    &    2.369\sym{***}&    1.672\sym{***}\\
+          &  (5.192)         &  (5.161)         \\
+\midrule
+Observations& 3246.000         & 4012.000         \\
+Adjusted R-squared&    0.835         &    0.817         \\
+Firm FE   &\checkmark         &\checkmark         \\
+Year FE   &\checkmark         &\checkmark         \\
+\bottomrule
+\end{tabular}
+}

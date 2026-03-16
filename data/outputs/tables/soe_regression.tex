@@ -1,0 +1,33 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{3}{D{.}{.}{-1}}}
+\toprule
+          &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}\\
+          &\multicolumn{1}{c}{roa\_w}&\multicolumn{1}{c}{roa\_w}&\multicolumn{1}{c}{roe\_w}\\
+\midrule
+L.centered\_gov\_score&    0.150\sym{***}&    0.126\sym{***}&    0.250\sym{***}\\
+          & (10.467)         &  (9.289)         &  (8.361)         \\
+treated × post × centered\_gov\_score × (Non-SOE)&    0.044         &    0.048         &    0.135         \\
+          &  (0.859)         &  (0.961)         &  (1.143)         \\
+treated × post × centered\_gov\_score × SOE&    0.093         &    0.044         &   -0.127         \\
+          &  (0.786)         &  (0.409)         & (-0.709)         \\
+L.size    &                  &   -0.020\sym{***}&   -0.048\sym{***}\\
+          &                  & (-8.279)         & (-7.333)         \\
+L.debt\_ratio\_w&                  &   -0.027\sym{**} &   -0.013         \\
+          &                  & (-2.381)         & (-0.469)         \\
+L.nwc\_w   &                  &    0.006         &   -0.051\sym{***}\\
+          &                  &  (0.861)         & (-2.898)         \\
+L.revenue\_growth\_w&                  &    0.026\sym{***}&    0.052\sym{***}\\
+          &                  &  (9.996)         &  (8.703)         \\
+L.capex\_ratio\_w&                  &    0.014         &    0.037         \\
+          &                  &  (1.512)         &  (1.645)         \\
+Constant  &    0.032\sym{***}&    0.463\sym{***}&    1.125\sym{***}\\
+          & (13.485)         &  (8.881)         &  (7.824)         \\
+\midrule
+Observations& 7602.000         & 7600.000         & 7600.000         \\
+Adjusted R-squared&    0.442         &    0.468         &    0.294         \\
+Firm FE   &\checkmark         &\checkmark         &\checkmark         \\
+Year FE   &\checkmark         &\checkmark         &\checkmark         \\
+\bottomrule
+\end{tabular}
+}

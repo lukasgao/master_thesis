@@ -1,0 +1,33 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{3}{D{.}{.}{-1}}}
+\toprule
+                &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}\\
+                &\multicolumn{1}{c}{roa}&\multicolumn{1}{c}{roa}&\multicolumn{1}{c}{roa}\\
+\midrule
+treated × post  &    0.001         &    0.001         &    0.000         \\
+                &  (0.218)         &  (0.281)         &  (0.070)         \\
+L.centered\_gov\_score&                  &    0.163\sym{***}&    0.133\sym{***}\\
+                &                  & (13.180)         & (11.635)         \\
+treated × post × centered\_gov\_score&                  &    0.098\sym{**} &    0.091\sym{**} \\
+                &                  &  (2.269)         &  (2.213)         \\
+L.size          &                  &                  &   -0.020\sym{***}\\
+                &                  &                  & (-8.516)         \\
+L.debt\_ratio\_w  &                  &                  &   -0.031\sym{***}\\
+                &                  &                  & (-2.632)         \\
+L.nwc\_w         &                  &                  &    0.010         \\
+                &                  &                  &  (1.486)         \\
+L.revenue\_growth\_w&                  &                  &    0.027\sym{***}\\
+                &                  &                  & (10.178)         \\
+L.capex\_ratio\_w &                  &                  &    0.011         \\
+                &                  &                  &  (1.120)         \\
+Constant        &    0.030\sym{***}&    0.030\sym{***}&    0.479\sym{***}\\
+                &(175.342)         &(142.200)         &  (9.087)         \\
+\midrule
+Observations    & 7602.000         & 7602.000         & 7600.000         \\
+Adjusted R-squared&    0.402         &    0.431         &    0.461         \\
+Firm FE         &\checkmark         &\checkmark         &\checkmark         \\
+Year FE         &\checkmark         &\checkmark         &\checkmark         \\
+\bottomrule
+\end{tabular}
+}
